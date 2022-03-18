@@ -67,6 +67,46 @@ if __name__=='__main__':
                 os.remove(os.path.join(os.getcwd(),'saved_variables', f))
             del files
 
+    smoothing_increment = st.sidebar.selectbox(
+        'smoothing increment (s)',
+        [0.1, 0.2, 0.25, 0.5],
+        index=2
+        )
+    # cols[0].write(smoothing_increment)
+    # full_dist = cols[1].number_input(
+    full_dist = st.sidebar.number_input(
+        'full sprint distance (m)',
+        value=25,
+        step=5
+        )
+    # cols[1].write(full_dist)
+    # start_dist = cols[2].number_input(
+    start_dist = st.sidebar.number_input(
+        'starting point of model (m)',
+        value=1,
+        step=1
+        )
+    # cols[2].write(start_dist)
+    # model_dist = cols[3].number_input(
+    model_dist = st.sidebar.number_input(
+        'end point of model (m)',
+        value=int(full_dist),
+        )
+    # cols[3].write(model_dist)
+    # par_source = cols[4].radio(
+    par_source = st.sidebar.radio(
+        'take parameters from',
+        ['smoothed data', 'model'],
+        index=0
+        )
+    # cols[4].write(par_source)
+    plot_col_nr = st.sidebar.number_input(
+        'plots per row',
+        min_value=1,
+        max_value=3,
+        value=3,
+        )
+
     upload_files = st.file_uploader(
         'upload raw data als csv file',
         accept_multiple_files=True
@@ -75,45 +115,7 @@ if __name__=='__main__':
     if upload_files != []:
         # cols = st.columns(5)
         # smoothing_increment = cols[0].selectbox(
-        smoothing_increment = st.sidebar.selectbox(
-            'smoothing increment (s)',
-            [0.1, 0.2, 0.25, 0.5],
-            index=2
-            )
-        # cols[0].write(smoothing_increment)
-        # full_dist = cols[1].number_input(
-        full_dist = st.sidebar.number_input(
-            'full sprint distance (m)',
-            value=25,
-            step=5
-            )
-        # cols[1].write(full_dist)
-        # start_dist = cols[2].number_input(
-        start_dist = st.sidebar.number_input(
-            'starting point of model (m)',
-            value=1,
-            step=1
-            )
-        # cols[2].write(start_dist)
-        # model_dist = cols[3].number_input(
-        model_dist = st.sidebar.number_input(
-            'end point of model (m)',
-            value=int(full_dist),
-            )
-        # cols[3].write(model_dist)
-        # par_source = cols[4].radio(
-        par_source = st.sidebar.radio(
-            'take parameters from',
-            ['smoothed data', 'model'],
-            index=0
-            )
-        # cols[4].write(par_source)
-        plot_col_nr = st.sidebar.number_input(
-            'plots per row',
-            min_value=1,
-            max_value=3,
-            value=3,
-            )
+
         if Options['save_variables']:
             with open(os.path.join(os.getcwd(), 'saved_variables','smoothing_increment.json'), 'w') as fp:
                 json.dump(smoothing_increment, fp)
