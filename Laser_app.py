@@ -315,7 +315,8 @@ if __name__=='__main__':
             elif par_source == 'model':
                 result = pd.concat((result, v_result_model, a_result_model), axis=1)
                 
-            Results = Results.append(result).reset_index(drop=True)
+            Results = Results.append(result).reset_index(drop=True).sort_values(by=['Dateiname'])
+            #%%
         st.dataframe(Results.style.format(subset=[col for col in Results.columns if 'max' in col], formatter="{:.2f}"))
         st.markdown(
             output_to_excel(
