@@ -29,8 +29,6 @@ warnings.filterwarnings("ignore", category=UserWarning)
 def exp_func(x, ymax, tau, base=0, delay=0):
     '''
     x = df_2['time']
-    a = 2
-    b = 2
     ymax = df_2['speed'].max()
     '''
     return base + ymax*(1-np.exp(-(x-delay)/tau))
@@ -107,6 +105,34 @@ if __name__=='__main__':
         value=3,
         )
 
+    plot_pars_names = [
+        'speed (smoothed, full)',
+        'speed (smoothed, sprint distance)',
+        'speed (modeled, to vmax)',
+        'acceleration (smoothed, full)',
+        'acceleration (smoothed, sprint distance)',
+        'acceleration (modeled, to vmax)',
+        ]
+    plot_pars_all = [
+        'speed_smoothed_full',
+        'speed_smoothed_sprint',
+        'speed_model_sprint',
+        'accel_smooth_full',
+        'accel_smooth_sprint',
+        'accel_model_sprint',
+        ]
+    plot_pars_default = [
+        'speed_smoothed_sprint',
+        'speed_model_sprint',
+        'accel_model_sprint',
+        ]# 'speed_smoothed_full'
+    st.sidebar.header('select parameters to plot')
+    plot_pars = {
+        par: st.sidebar.checkbox(
+            plot_pars_names[i],
+            True if par in plot_pars_default else False
+            ) for i,par in enumerate(plot_pars_all)
+        }
     upload_files = st.file_uploader(
         'upload raw data als csv file',
         accept_multiple_files=True
@@ -141,7 +167,7 @@ if __name__=='__main__':
                     json.dump(Options, fp)
                 
             f.seek(0)    
-            df = pd.read_csv(f, sep=';', names=['time', 'position'])
+            df = pd.read_csv(f, sep=';', names=['time', 'position'])#.dropna()
             if Options['save_variables']:
                 df.to_json(os.path.join(os.getcwd(), 'saved_variables','df.json'))
             
@@ -155,9 +181,9 @@ if __name__=='__main__':
                     df_smooth.loc[df_chop.index, 'position']
                     ),
                 axis=1
-                )
+                )# plt.figure() df_2['position'].plot()
             df_2['speed'] = np.gradient(df_2['position']) / np.gradient(df_2['time'])# plt.figure() df_2['speed'].plot()
-            df_2['accel'] = np.gradient(df_2['speed']) / np.gradient(df_2['time'])# plt.figure() df_2['speed'].plot()
+            df_2['accel'] = np.gradient(df_2['speed']) / np.gradient(df_2['time'])# plt.figure() plt.scatter(df_2.index,df_2['accel']) plt.scatter(df_2[((df_2['accel']>0) & (df_2['accel']<10))].index,df_2[((df_2['accel']>0) & (df_2['accel']<10))]['accel'])
 
             plt.close('vt')
             pv_fig = plt.figure('vt')
@@ -165,38 +191,47 @@ if __name__=='__main__':
                 plt.title(f.name.split('.')[0])
             except:
                 plt.title(files[0].split('_')[1].split('\\')[-1])
-            plt.plot(
-                df_2['time'],
-                df_2['speed'],
-                label='speed (smoothed)',
-                LineStyle=':',
-                color='blue'
-                )
-            plt.scatter(
-                df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['time'],
-                df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['speed'],
-                facecolors='none', edgecolors='blue'
-                )
+            if plot_pars['speed_smoothed_full']:
+                plt.plot(
+                    df_2['time'],
+                    df_2['speed'],
+                    # label='speed (smoothed)',
+                    LineStyle=':',
+                    color='blue'
+                    )
+            if plot_pars['speed_smoothed_sprint']:
+                plt.scatter(
+                    df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['time'],
+                    df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['speed'],
+                    label='speed (smoothed)',
+                    facecolors='none', edgecolors='blue'
+                    )
 
             on = df_2[df_2['position']<=model_dist][df_2['position']<start_dist].index.max()
             off = df_2[df_2['position']<=model_dist]['speed'].idxmax()
             x = df_2.loc[on:off, 'time']# df_2[((df_2['position']>=start_dist) & (df_2['position']<=model_dist))]['time']
             y = df_2.loc[on:off, 'speed']# df_2[((df_2['position']>=start_dist) & (df_2['position']<=model_dist))]['speed']
-            z = df_2.loc[on:off, 'accel']
-            plt.scatter(x, y, color='blue')#, label='data points for model')
+            z = df_2.loc[on:off, 'accel']# plt.figure() plt.scatter(z.index,z)
+            
+            if plot_pars['speed_smoothed_sprint']:
+                plt.scatter(x, y, color='blue')#, label='data points for model')
             delay_est = df_2[df_2['speed']>0.5]['time'].min()# estimation of delay for setting the bounds of curve_fit
             tau_est = df_2[df_2['speed']<=0.63*y.max()]['time'].max() - delay_est# estimation of tau (as time to 63% of max) for setting the bounds of curve_fit
             bounds=(
                 [0.9*y.max(), 0, -0.1, 0],
                 [1.2*y.max(), 2*tau_est, 0.1, 2*delay_est]
                 )
-            popt, pcov = curve_fit(
-                exp_func,
-                x.loc[:x.idxmax()],
-                y.loc[:x.idxmax()],
-                bounds=bounds
-                )
-            plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
+            try:
+                popt, pcov = curve_fit(
+                    exp_func,
+                    x.loc[:x.idxmax()],
+                    y[y>0].loc[:x.idxmax()].dropna().sort_values(),
+                    bounds=bounds
+                    )
+            except:
+                continue
+            if plot_pars['speed_model_sprint']:
+                plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
             model_t = pd.Series(
                 np.arange(
                     np.floor(popt[3]*(10**int(np.ceil(np.log10(1/s_incr))))) / (10**int(np.ceil(np.log10(1/s_incr)))),
@@ -217,40 +252,44 @@ if __name__=='__main__':
             model_d = (model_v * s_incr).cumsum() + df_2[df_2['time']>=popt[3]]['position'].min()
             model_a = pd.Series(np.gradient(model_v) / s_incr, name='a')
 
-            plt.plot(
-                model_t,
-                model_v,
-                color='red',
-                LineStyle='--'
-                )
-            plt.plot(
-                df_2['time'],
-                df_2['accel'],
-                label='accel (smoothed)',
-                LineStyle=':',
-                color='orange'
-                )
-            plt.scatter(
-                df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['time'],
-                df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['accel'],
-                facecolors='none', edgecolors='orange'
-                )
-            plt.scatter(x, z, color='orange')#, label='data points for model')
-            plt.plot(
-                # model_t[((model_d>=start_dist) & (model_d<=model_dist))],
-                # model_a[((model_d>=start_dist) & (model_d<=model_dist))],
-                model_t[((model_t>=x.iloc[0]) & (model_t<=x.iloc[-1]))],
-                model_a[((model_t>=x.iloc[0]) & (model_t<=x.iloc[-1]))],
-                
-                color='green',
-                label='accel (model)'
-                )
-            plt.plot(
-                model_t,
-                model_a,
-                color='green',
-                LineStyle='--'
-                )
+            if plot_pars['speed_model_sprint']:
+                plt.plot(
+                    model_t,
+                    model_v,
+                    color='red',
+                    LineStyle='--'
+                    )
+            if plot_pars['accel_smooth_full']:
+                plt.plot(
+                    df_2['time'],
+                    df_2['accel'],
+                    label='accel (smoothed)',
+                    LineStyle=':',
+                    color='orange'
+                    )
+            if plot_pars['accel_smooth_sprint']:
+                plt.scatter(
+                    df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['time'],
+                    df_2[((df_2['position']>=start_dist) & (df_2['position']<=full_dist))]['accel'],
+                    facecolors='none', edgecolors='orange'
+                    )
+                plt.scatter(x, z, color='orange')#, label='data points for model')
+            if plot_pars['accel_model_sprint']:
+                plt.plot(
+                    # model_t[((model_d>=start_dist) & (model_d<=model_dist))],
+                    # model_a[((model_d>=start_dist) & (model_d<=model_dist))],
+                    model_t[((model_t>=x.iloc[0]) & (model_t<=x.iloc[-1]))],
+                    model_a[((model_t>=x.iloc[0]) & (model_t<=x.iloc[-1]))],
+                    
+                    color='green',
+                    label='accel (model)'
+                    )
+                plt.plot(
+                    model_t,
+                    model_a,
+                    color='green',
+                    LineStyle='--'
+                    )
 
             for ls,x in enumerate(np.unique([start_dist, model_dist, full_dist])):
                 plt.axvline(df_2.loc[
