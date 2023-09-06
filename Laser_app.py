@@ -58,7 +58,7 @@ if __name__=='__main__':
     # Sprint Laser
     """)
     st.sidebar.header('Options')
-    Options = {'save_variables': True if 'C:\\Users' in os.getcwd() else False}
+    Options = {'save_variables': False}# True if 'C:\\Users' in os.getcwd() else False}
     if Options['save_variables']:
         for (_, _, files) in os.walk(os.path.join(os.getcwd(),'saved_variables')):
             for f in files:
