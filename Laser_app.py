@@ -364,8 +364,9 @@ if __name__=='__main__':
                 result = pd.concat((result, v_result_model, a_result_model), axis=1)
                 
             # Results = Results.append(result).reset_index(drop=True).sort_values(by=['Dateiname'])
-            Results = pd.concat([Results, result])
+            Results = pd.concat([Results, result]).sort_values(by=['Dateiname']).reset_index(drop=True)
             #%%
+        Results.index = [i+1 for i in Results.index]
         st.dataframe(Results.style.format(subset=[col for col in Results.columns if 'max' in col], formatter="{:.2f}"))
         st.markdown(
             output_to_excel(
