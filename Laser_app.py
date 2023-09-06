@@ -264,7 +264,7 @@ if __name__=='__main__':
             st.write(x)
             st.write(exp_func(x, *popt))
             if plot_pars['speed_model_sprint']:
-                plt.plot(x, exp_func(x, *popt))#, color='red', label='speed (model)')
+                plt.plot(np.array(x), np.array(exp_func(x, *popt)))#, color='red', label='speed (model)')
             model_t = pd.Series(
                 np.arange(
                     np.floor(popt[3]*(10**int(np.ceil(np.log10(1/s_incr))))) / (10**int(np.ceil(np.log10(1/s_incr)))),
