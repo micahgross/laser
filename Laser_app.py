@@ -16,6 +16,8 @@ import numpy as np
 import os
 import json
 import openpyxl
+import xlsxwriter
+
 from io import BytesIO
 import base64
 import matplotlib.pyplot as plt
@@ -33,41 +35,10 @@ def exp_func(x, ymax, tau, base=0, delay=0):
     '''
     return base + ymax*(1-np.exp(-(x-delay)/tau))
 
-# test execution
-# x = np.linspace(0,3,9)
-# st.write(x)
-# y = np.array([0,1.2,2.2,3,3.6,4,4.2,4.3,4.3])
-# st.write(y)
-# delay_est = 0.5# estimation of delay for setting the bounds of curve_fit
-# tau_est = x[
-#     min(np.where(y>=0.63*max(y))[0])
-#     ] - delay_est# estimation of tau (as time to 63% of max) for setting the bounds of curve_fit
-
-# bounds=(
-#     [0.9*max(y), 0, -0.1, 0],
-#     [1.2*max(y), 2*tau_est, 0.1, 2*delay_est]
-#     )
-
-# popt, pcov = curve_fit(
-#     exp_func,
-#     x,
-#     y,
-#     bounds=bounds
-#     )
-
-# st.write(exp_func(x, *popt))
-# st.write('ok 1')
-# fig = plt.figure()
-# plt.plot(x, y, color='blue', label='speed')
-# st.write('ok 2')
-# plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
-# st.write('ok 3')
-# st.pyplot(fig)
-# st.write('ok 4')
 #%%
 def output_to_excel(Results):
     output = BytesIO()
-    with pd.ExcelWriter(output) as writer:
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         Results.to_excel(
             writer,
             sheet_name='summary',
