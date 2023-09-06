@@ -44,7 +44,8 @@ def output_to_excel(Results):
             sheet_name='summary',
             index=False
             )
-        writer.save()
+        # writer.save()
+        writer.close()
         processed_data = output.getvalue()
         
     b64 = base64.b64encode(processed_data)
