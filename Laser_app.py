@@ -35,27 +35,27 @@ def exp_func(x, ymax, tau, base=0, delay=0):
     return base + ymax*(1-np.exp(-(x-delay)/tau))
 
 # test execution
-x = np.linspace(0,3,9)
-y = np.array([0,1.2,2.2,3,3.6,4,4.2,4.3,4.3])
-delay_est = 0.5# estimation of delay for setting the bounds of curve_fit
-tau_est = x[
-    min(np.where(y>=0.63*max(y))[0])
-    ] - delay_est# estimation of tau (as time to 63% of max) for setting the bounds of curve_fit
+# x = np.linspace(0,3,9)
+# y = np.array([0,1.2,2.2,3,3.6,4,4.2,4.3,4.3])
+# delay_est = 0.5# estimation of delay for setting the bounds of curve_fit
+# tau_est = x[
+#     min(np.where(y>=0.63*max(y))[0])
+#     ] - delay_est# estimation of tau (as time to 63% of max) for setting the bounds of curve_fit
 
-bounds=(
-    [0.9*max(y), 0, -0.1, 0],
-    [1.2*max(y), 2*tau_est, 0.1, 2*delay_est]
-    )
+# bounds=(
+#     [0.9*max(y), 0, -0.1, 0],
+#     [1.2*max(y), 2*tau_est, 0.1, 2*delay_est]
+#     )
 
-popt, pcov = curve_fit(
-    exp_func,
-    x,
-    y,
-    bounds=bounds
-    )
+# popt, pcov = curve_fit(
+#     exp_func,
+#     x,
+#     y,
+#     bounds=bounds
+#     )
 
-print(exp_func(x, *popt))
-plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
+# print(exp_func(x, *popt))
+# plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
 #%%
 def output_to_excel(Results):
     output = BytesIO()
@@ -254,7 +254,7 @@ if __name__=='__main__':
             except:
                 continue
             if plot_pars['speed_model_sprint']:
-                plt.plot(x, exp_func(x, *popt), color='red', label='speed (model)')
+                plt.plot(np.array(x), np.array(exp_func(x, *popt)), color='red', label='speed (model)')
             model_t = pd.Series(
                 np.arange(
                     np.floor(popt[3]*(10**int(np.ceil(np.log10(1/s_incr))))) / (10**int(np.ceil(np.log10(1/s_incr)))),
